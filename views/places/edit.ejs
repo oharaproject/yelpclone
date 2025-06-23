@@ -2,7 +2,12 @@
 
 <h1 class="text-center">Edit Place</h1>
 <div class="col-6 offset-3">
-  <form action="/places/<%= place._id %>?_method=PUT" method="POST">
+  <form
+    action="/places/<%= place._id %>?_method=PUT"
+    method="POST"
+    class="validate-form"
+    novalidate
+  >
     <div class="mb-3">
       <label for="title" class="form-label">Title</label>
       <input
@@ -11,7 +16,10 @@
         id="title"
         class="form-control"
         value="<%= place.title %>"
+        required
       />
+      <div class="valid-feedback">Looks good!</div>
+      <div class="invalid-feedback">Please fill out this field.</div>
     </div>
 
     <div class="mb-3">
@@ -22,7 +30,10 @@
         id="location"
         class="form-control"
         value="<%= place.location %>"
+        required
       />
+      <div class="valid-feedback">Looks good!</div>
+      <div class="invalid-feedback">Please fill out this field.</div>
     </div>
 
     <div class="mb-3">
@@ -32,9 +43,13 @@
         name="place[description]"
         id="description"
         class="form-control"
+        required
       >
+      
 <%= place.description %></textarea
       >
+      <div class="valid-feedback">Looks good!</div>
+      <div class="invalid-feedback">Please fill out this field.</div>
     </div>
 
     <div class="mb-3">
@@ -45,7 +60,10 @@
         id="price"
         class="form-control"
         value="<%= place.price %>"
+        required
       />
+      <div class="valid-feedback">Looks good!</div>
+      <div class="invalid-feedback">Please fill out this field.</div>
     </div>
 
     <div class="mb-3">
@@ -56,9 +74,35 @@
         id="image"
         class="form-control"
         value="<%= place.image %>"
+        required
       />
+      <div class="valid-feedback">Looks good!</div>
+      <div class="invalid-feedback">Please fill out this field.</div>
     </div>
 
     <button type="submit" class="btn btn-success">Save</button>
   </form>
 </div>
+
+<script>
+  (() => {
+    "use strict";
+
+    const forms = document.querySelectorAll(".validate-form");
+
+    Array.from(forms).forEach((form) => {
+      form.addEventListener(
+        "submit",
+        (event) => {
+          if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+
+          form.classList.add("was-validated");
+        },
+        false
+      );
+    });
+  })();
+</script>
