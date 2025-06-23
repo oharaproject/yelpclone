@@ -9,6 +9,7 @@ const placeSchema = Schema({
   price: String,
   description: String,
   location: String,
+  image: String,
 });
 
 // model adalah alat untuk berinteraksi dengan database
