@@ -8,16 +8,11 @@ const wrapAsync = require("./utils/wrapAsync");
 const path = require("path");
 const app = express();
 
-// Middleware
-app.use(express.urlencoded({ extended: true }));
-app.use(methodOverride("_method"));
-
-// model
+// models
 const Place = require("./models/place");
 
-app.get("/", (req, res) => {
-  res.render("home");
-});
+// schemas
+const { placeSchema } = require("./schemas/place");
 
 // koneksi mongodb
 mongoose
@@ -33,6 +28,24 @@ app.engine("ejs", ejsMate);
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
+// Middleware
+app.use(express.urlencoded({ extended: true }));
+app.use(methodOverride("_method"));
+
+const validatePlace = (req, res, next) => {
+  const { error } = placeSchema.validate(req.body);
+  if (error) {
+    const msg = error.details.map((el) => el.message).join(",");
+    return next(new ExpressError(msg, 400));
+  } else {
+    next();
+  }
+};
+
+app.get("/", (req, res) => {
+  res.render("home");
+});
+
 app.get(
   "/places",
   wrapAsync(async (req, res) => {
@@ -47,23 +60,8 @@ app.get("/places/create", (req, res) => {
 
 app.post(
   "/places",
+  validatePlace,
   wrapAsync(async (req, res, next) => {
-    const placeSchema = Joi.object({
-      place: Joi.object({
-        title: Joi.string().required(),
-        location: Joi.string().required(),
-        description: Joi.string().required(),
-        price: Joi.number().min(0).required(),
-        image: Joi.string().required(),
-      }).required(),
-    });
-
-    const { error } = placeSchema.validate(req.body);
-    if (error) {
-      console.log(error);
-      return next(new ExpressError(error, 400));
-    }
-
     const place = new Place(req.body.place);
     await place.save();
     res.redirect("/places");
@@ -92,6 +90,7 @@ app.get(
 // Update place route
 app.put(
   "/places/:id",
+  validatePlace,
   wrapAsync(async (req, res) => {
     const { id } = req.params;
     await Place.findByIdAndUpdate(id, { ...req.body.place });
