@@ -6,7 +6,7 @@ const Schema = mongoose.Schema;
 
 const placeSchema = Schema({
   title: String,
-  price: String,
+  price: Number,
   description: String,
   location: String,
   image: String,
