@@ -10,9 +10,11 @@ const app = express();
 
 // models
 const Place = require("./models/place");
+const Review = require("./models/review");
 
 // schemas
 const { placeSchema } = require("./schemas/place");
+const { reviewSchema } = require("./schemas/review");
 
 // koneksi mongodb
 mongoose
@@ -34,6 +36,16 @@ app.use(methodOverride("_method"));
 
 const validatePlace = (req, res, next) => {
   const { error } = placeSchema.validate(req.body);
+  if (error) {
+    const msg = error.details.map((el) => el.message).join(",");
+    return next(new ExpressError(msg, 400));
+  } else {
+    next();
+  }
+};
+
+const validateReview = (req, res, next) => {
+  const { error } = reviewSchema.validate(req.body);
   if (error) {
     const msg = error.details.map((el) => el.message).join(",");
     return next(new ExpressError(msg, 400));
@@ -104,6 +116,20 @@ app.delete(
     const { id } = req.params;
     await Place.findByIdAndDelete(id);
     res.redirect("/places");
+  })
+);
+
+app.post(
+  "/places/:id/reviews",
+  validateReview,
+  wrapAsync(async (req, res) => {
+    const review = new Review(req.body.review);
+    const { id } = req.params;
+    const place = await Place.findById(id);
+    place.reviews.push(review);
+    await review.save();
+    await place.save();
+    res.redirect(`/places/${id}`);
   })
 );
 

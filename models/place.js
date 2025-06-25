@@ -10,8 +10,13 @@ const placeSchema = Schema({
   description: String,
   location: String,
   image: String,
+  reviews: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Review",
+    },
+  ],
 });
 
 // model adalah alat untuk berinteraksi dengan database
-
 module.exports = mongoose.model("Place", placeSchema);
