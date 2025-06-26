@@ -1,10 +1,11 @@
 const mongoose = require("mongoose");
+const Review = require("./review");
 
 // schema adalah blueprintnya
 
 const Schema = mongoose.Schema;
 
-const placeSchema = Schema({
+const placeSchema = new Schema({
   title: String,
   price: Number,
   description: String,
@@ -16,6 +17,13 @@ const placeSchema = Schema({
       ref: "Review",
     },
   ],
+});
+
+// setelah tempat dihapus, hapus juga semua review yang terkait
+placeSchema.post("findOneAndDelete", async function (doc) {
+  if (doc) {
+    await Review.deleteMany({ _id: { $in: doc.reviews } });
+  }
 });
 
 // model adalah alat untuk berinteraksi dengan database

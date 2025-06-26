@@ -84,7 +84,7 @@ app.get(
   "/places/:id",
   wrapAsync(async (req, res) => {
     const { id } = req.params;
-    const place = await Place.findById(id);
+    const place = await Place.findById(id).populate("reviews");
     res.render("places/show", { place });
   })
 );
@@ -130,6 +130,17 @@ app.post(
     await review.save();
     await place.save();
     res.redirect(`/places/${id}`);
+  })
+);
+
+// menghapus data review beserta relasinya
+app.delete(
+  "/places/:place_id/reviews/:review_id",
+  wrapAsync(async (req, res) => {
+    const { place_id, review_id } = req.params;
+    await Place.findByIdAndUpdate(place_id, { $pull: { reviews: review_id } });
+    await Review.findByIdAndDelete(review_id);
+    res.redirect(`/places/${place_id}`);
   })
 );
 
