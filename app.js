@@ -1,22 +1,12 @@
 const ejsMate = require("ejs-mate");
 const express = require("express");
 const ExpressError = require("./utils/ExpressError");
-const Joi = require("joi");
 const methodOverride = require("method-override");
 const mongoose = require("mongoose");
-const wrapAsync = require("./utils/wrapAsync");
 const path = require("path");
 const app = express();
 
-// models
-const Place = require("./models/place");
-const Review = require("./models/review");
-
-// schemas
-const { placeSchema } = require("./schemas/place");
-const { reviewSchema } = require("./schemas/review");
-
-// koneksi mongodb
+// connect to mongodb
 mongoose
   .connect("mongodb://127.0.0.1/bestpoints")
   .then((result) => {
@@ -26,6 +16,7 @@ mongoose
     console.log(err);
   });
 
+// view engine
 app.engine("ejs", ejsMate);
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
@@ -34,115 +25,16 @@ app.set("views", path.join(__dirname, "views"));
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
 
-const validatePlace = (req, res, next) => {
-  const { error } = placeSchema.validate(req.body);
-  if (error) {
-    const msg = error.details.map((el) => el.message).join(",");
-    return next(new ExpressError(msg, 400));
-  } else {
-    next();
-  }
-};
-
-const validateReview = (req, res, next) => {
-  const { error } = reviewSchema.validate(req.body);
-  if (error) {
-    const msg = error.details.map((el) => el.message).join(",");
-    return next(new ExpressError(msg, 400));
-  } else {
-    next();
-  }
-};
-
-app.get("/", (req, res) => {
+app.get("/", async (req, res) => {
   res.render("home");
 });
 
-app.get(
-  "/places",
-  wrapAsync(async (req, res) => {
-    const places = await Place.find();
-    res.render("places/index", { places });
-  })
-);
+// Mengatur semua rute untuk fitur tempat (place) → CRUD dan tampilan tempat
+app.use("/places", require("./routes/places"));
 
-app.get("/places/create", (req, res) => {
-  res.render("places/create");
-});
-
-app.post(
-  "/places",
-  validatePlace,
-  wrapAsync(async (req, res, next) => {
-    const place = new Place(req.body.place);
-    await place.save();
-    res.redirect("/places");
-  })
-);
-
-app.get(
-  "/places/:id",
-  wrapAsync(async (req, res) => {
-    const { id } = req.params;
-    const place = await Place.findById(id).populate("reviews");
-    res.render("places/show", { place });
-  })
-);
-
-// Edit place route
-app.get(
-  "/places/:id/edit",
-  wrapAsync(async (req, res) => {
-    const { id } = req.params;
-    const place = await Place.findById(id);
-    res.render("places/edit", { place });
-  })
-);
-
-// Update place route
-app.put(
-  "/places/:id",
-  validatePlace,
-  wrapAsync(async (req, res) => {
-    const { id } = req.params;
-    await Place.findByIdAndUpdate(id, { ...req.body.place });
-    res.redirect("/places");
-  })
-);
-
-app.delete(
-  "/places/:id",
-  wrapAsync(async (req, res) => {
-    const { id } = req.params;
-    await Place.findByIdAndDelete(id);
-    res.redirect("/places");
-  })
-);
-
-app.post(
-  "/places/:id/reviews",
-  validateReview,
-  wrapAsync(async (req, res) => {
-    const review = new Review(req.body.review);
-    const { id } = req.params;
-    const place = await Place.findById(id);
-    place.reviews.push(review);
-    await review.save();
-    await place.save();
-    res.redirect(`/places/${id}`);
-  })
-);
-
-// menghapus data review beserta relasinya
-app.delete(
-  "/places/:place_id/reviews/:review_id",
-  wrapAsync(async (req, res) => {
-    const { place_id, review_id } = req.params;
-    await Place.findByIdAndUpdate(place_id, { $pull: { reviews: review_id } });
-    await Review.findByIdAndDelete(review_id);
-    res.redirect(`/places/${place_id}`);
-  })
-);
+// Mengatur semua rute untuk fitur ulasan (review) berdasarkan ID tempat
+// Catatan: :place_id adalah parameter dinamis yang diteruskan ke router review
+app.use("/places/:place_id/reviews", require("./routes/reviews"));
 
 // app.all("/*", (req, res, next) => {
 //   next(new ExpressError("Page Not Found", 404));
