@@ -1,9 +1,11 @@
 const ejsMate = require("ejs-mate");
 const express = require("express");
+const session = require("express-session");
 const ExpressError = require("./utils/ExpressError");
 const methodOverride = require("method-override");
 const mongoose = require("mongoose");
 const path = require("path");
+const { date } = require("joi");
 const app = express();
 
 // connect to mongodb
@@ -24,6 +26,19 @@ app.set("views", path.join(__dirname, "views"));
 // Middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
+app.use(express.static(path.join(__dirname, "public")));
+app.use(
+  session({
+    secret: "this-is-a-secret-key",
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+      httpOnly: true,
+      expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+    },
+  })
+);
 
 app.get("/", async (req, res) => {
   res.render("home");
