@@ -1,5 +1,6 @@
 const express = require("express");
 const wrapAsync = require("../utils/wrapAsync");
+const isValidObjectId = require("../middleware/isValidObjectId");
 
 // models
 const Place = require("../models/place");
@@ -40,12 +41,14 @@ router.post(
   wrapAsync(async (req, res, next) => {
     const place = new Place(req.body.place);
     await place.save();
+    req.flash("success_msg", "Place added successfully!");
     res.redirect("/places");
   })
 );
 
 router.get(
   "/:id",
+  isValidObjectId("/places"), // Validate the ID format
   wrapAsync(async (req, res) => {
     const { id } = req.params;
     const place = await Place.findById(id).populate("reviews");
@@ -56,6 +59,7 @@ router.get(
 // Edit place route
 router.get(
   "/:id/edit",
+  isValidObjectId("/places"), // Validate the ID format
   wrapAsync(async (req, res) => {
     const { id } = req.params;
     const place = await Place.findById(id);
@@ -66,6 +70,7 @@ router.get(
 // Update place route
 router.put(
   "/:id",
+  isValidObjectId("/places"), // Validate the ID format
   validatePlace,
   wrapAsync(async (req, res) => {
     const { id } = req.params;
@@ -76,6 +81,7 @@ router.put(
 
 router.delete(
   "/:id",
+  isValidObjectId("/places"), // Validate the ID format
   wrapAsync(async (req, res) => {
     const { id } = req.params;
     await Place.findByIdAndDelete(id);

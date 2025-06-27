@@ -1,6 +1,7 @@
 const ejsMate = require("ejs-mate");
 const express = require("express");
 const session = require("express-session");
+const flash = require("connect-flash");
 const ExpressError = require("./utils/ExpressError");
 const methodOverride = require("method-override");
 const mongoose = require("mongoose");
@@ -39,6 +40,12 @@ app.use(
     },
   })
 );
+app.use(flash());
+app.use((req, res, next) => {
+  res.locals.success_msg = req.flash("success_msg");
+  res.locals.error_msg = req.flash("error_msg");
+  next();
+});
 
 app.get("/", async (req, res) => {
   res.render("home");

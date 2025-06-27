@@ -14,7 +14,9 @@
   <body class="d-flex flex-column min-vh-100">
     <%- include('partials/navbar') %>
 
-    <main class="container mt-5"><%- body %></main>
+    <main class="container mt-5">
+      <%= success_msg %> <%- include('partials/alert') %> <%- body %>
+    </main>
 
     <%- include('partials/footer') %>
 
