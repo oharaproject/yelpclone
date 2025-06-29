@@ -11,7 +11,7 @@ const { reviewSchema } = require("../schemas/review");
 
 const ExpressError = require("../utils/ExpressError");
 const wrapAsync = require("../utils/wrapAsync");
-const isValidObjectId = require("../middleware/isValidObjectId");
+const isValidObjectId = require("../middlewares/isValidObjectId");
 
 const router = express.Router({ mergeParams: true });
 

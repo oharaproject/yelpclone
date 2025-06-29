@@ -7,6 +7,10 @@ const methodOverride = require("method-override");
 const mongoose = require("mongoose");
 const path = require("path");
 const { date } = require("joi");
+const passport = require("passport");
+const localStrategy = require("passport-local");
+const User = require("./models/user");
+const { route } = require("./routes/places");
 const app = express();
 
 // connect to mongodb
@@ -41,6 +45,12 @@ app.use(
   })
 );
 app.use(flash());
+app.use(passport.initialize()); // Initialize passport for authentication
+app.use(passport.session()); // Initialize passport for authentication
+passport.use(new localStrategy(User.authenticate())); // Use local strategy for authentication
+passport.serializeUser(User.serializeUser()); // Serialize user to session
+passport.deserializeUser(User.deserializeUser()); // Deserialize user from session
+
 app.use((req, res, next) => {
   res.locals.success_msg = req.flash("success_msg");
   res.locals.error_msg = req.flash("error_msg");
@@ -50,6 +60,8 @@ app.use((req, res, next) => {
 app.get("/", async (req, res) => {
   res.render("home");
 });
+
+app.use("/", require("./routes/auth")); // Mengatur semua rute untuk fitur otentikasi (auth) → login, register, logout
 
 // Mengatur semua rute untuk fitur tempat (place) → CRUD dan tampilan tempat
 app.use("/places", require("./routes/places"));
