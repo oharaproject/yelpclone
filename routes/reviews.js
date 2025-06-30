@@ -12,6 +12,7 @@ const { reviewSchema } = require("../schemas/review");
 const ExpressError = require("../utils/ExpressError");
 const wrapAsync = require("../utils/wrapAsync");
 const isValidObjectId = require("../middlewares/isValidObjectId");
+const isAuth = require("../middlewares/isAuth");
 
 const router = express.Router({ mergeParams: true });
 
@@ -28,6 +29,7 @@ const validateReview = (req, res, next) => {
 
 router.post(
   "/",
+  isAuth,
   isValidObjectId("/places"), // Validate the place ID format
   validateReview,
   wrapAsync(async (req, res) => {
@@ -43,6 +45,7 @@ router.post(
 // menghapus data review beserta relasinya
 router.delete(
   "/:review_id",
+  isAuth,
   isValidObjectId("/places"), // Validate the review ID format
   wrapAsync(async (req, res) => {
     const { place_id, review_id } = req.params;

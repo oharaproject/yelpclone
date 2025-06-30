@@ -52,6 +52,7 @@ passport.serializeUser(User.serializeUser()); // Serialize user to session
 passport.deserializeUser(User.deserializeUser()); // Deserialize user from session
 
 app.use((req, res, next) => {
+  res.locals.currentUser = req.user;
   res.locals.success_msg = req.flash("success_msg");
   res.locals.error_msg = req.flash("error_msg");
   next();

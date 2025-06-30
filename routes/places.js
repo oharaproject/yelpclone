@@ -1,6 +1,7 @@
 const express = require("express");
 const wrapAsync = require("../utils/wrapAsync");
 const isValidObjectId = require("../middlewares/isValidObjectId");
+const isAuth = require("../middlewares/isAuth");
 
 // models
 const Place = require("../models/place");
@@ -31,12 +32,13 @@ router.get(
   })
 );
 
-router.get("/create", (req, res) => {
+router.get("/create", isAuth, (req, res) => {
   res.render("places/create");
 });
 
 router.post(
   "/",
+  isAuth, // Ensure the user is authenticated before creating a place
   validatePlace,
   wrapAsync(async (req, res, next) => {
     const place = new Place(req.body.place);
@@ -59,6 +61,7 @@ router.get(
 // Edit place route
 router.get(
   "/:id/edit",
+  isAuth,
   isValidObjectId("/places"), // Validate the ID format
   wrapAsync(async (req, res) => {
     const { id } = req.params;
@@ -70,6 +73,7 @@ router.get(
 // Update place route
 router.put(
   "/:id",
+  isAuth,
   isValidObjectId("/places"), // Validate the ID format
   validatePlace,
   wrapAsync(async (req, res) => {
@@ -81,6 +85,7 @@ router.put(
 
 router.delete(
   "/:id",
+  isAuth,
   isValidObjectId("/places"), // Validate the ID format
   wrapAsync(async (req, res) => {
     const { id } = req.params;
