@@ -1,4 +1,6 @@
 const Place = require("../models/place");
+const fs = require("fs");
+const ExpressError = require("../utils/ExpressError");
 
 // index
 module.exports.index = async (req, res) => {
@@ -8,9 +10,16 @@ module.exports.index = async (req, res) => {
 
 // place create post & save
 module.exports.store = async (req, res, next) => {
+  const images = req.files.map((file) => ({
+    url: file.path,
+    filename: file.filename,
+  }));
   const place = new Place(req.body.place);
   place.author = req.user._id;
+  place.images = images;
+
   await place.save();
+
   req.flash("success_msg", "Place added successfully!");
   res.redirect("/places");
 };
@@ -39,7 +48,23 @@ module.exports.edit = async (req, res) => {
 // update place
 module.exports.update = async (req, res) => {
   const { id } = req.params;
-  await Place.findByIdAndUpdate(id, { ...req.body.place });
+  const place = await Place.findByIdAndUpdate(id, { ...req.body.place });
+
+  if (req.files && req.files.length > 0) {
+    // delete old images
+    place.images.forEach((image) => {
+      fs.unlink(image.url, (err) => new ExpressError(err));
+    });
+
+    // add new images
+    const images = req.files.map((file) => ({
+      url: file.path,
+      filename: file.filename,
+    }));
+    place.images = images;
+    await place.save();
+  }
+
   req.flash("success_msg", "Place updated successfully!");
   res.redirect(`/places/${id}`);
 };

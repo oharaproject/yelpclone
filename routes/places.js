@@ -6,12 +6,18 @@ const { isAuthorPlace } = require("../middlewares/isAuthor");
 const PlaceController = require("../controllers/places");
 const router = express.Router();
 const { validatePlace } = require("../middlewares/validator");
+const upload = require("../config/multer");
 
 // place index & place post (kelompokan router yang sama)
 router
   .route("/")
   .get(wrapAsync(PlaceController.index))
-  .post(isAuth, validatePlace, wrapAsync(PlaceController.store));
+  .post(
+    isAuth,
+    upload.array("image", 5),
+    validatePlace,
+    wrapAsync(PlaceController.store)
+  );
 
 // place create
 router.get("/create", isAuth, (req, res) => {
@@ -26,6 +32,7 @@ router
     isAuth,
     isAuthorPlace,
     isValidObjectId("/places"),
+    upload.array("image", 5),
     validatePlace,
     wrapAsync(PlaceController.update)
   )
