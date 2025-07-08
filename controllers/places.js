@@ -1,6 +1,7 @@
 const Place = require("../models/place");
 const fs = require("fs");
 const ExpressError = require("../utils/ExpressError");
+const { default: next } = require("next");
 
 // index
 module.exports.index = async (req, res) => {
@@ -72,6 +73,54 @@ module.exports.update = async (req, res) => {
 // delete place
 module.exports.destroy = async (req, res) => {
   const { id } = req.params;
-  await Place.findByIdAndDelete(id);
+  const place = await Place.findById(id);
+
+  if (place.images.length > 0) {
+    place.images.forEach((image) => {
+      fs.unlinkSync(image.url);
+    });
+  }
+
+  await Place.findByIdAndDelete(req.params.id);
+  req.flash("success_msg", "Place Deleted!");
   res.redirect("/places");
+};
+
+// delete image from place
+module.exports.destroyImages = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { images } = req.body;
+
+    // Cek apakah model Place ditemukan berdasarkan ID-nya
+    const place = await Place.findById(id);
+    if (!place) {
+      req.flash("error_msg", "Place not found");
+      return res.redirect(`/places/${id}/edit`);
+    }
+
+    if (!images || images.length === 0) {
+      req.flash("error_msg", "Please select at least one image");
+      return res.redirect(`/places/${id}/edit`);
+    }
+
+    // Hapus file gambar dari sistem file
+    images.forEach((image) => {
+      fs.unlinkSync(image);
+    });
+
+    // Hapus data gambar dari model Place
+    await Place.findByIdAndUpdate(
+      id,
+      { $pull: { images: { url: { $in: images } } } },
+      { new: true }
+    );
+
+    req.flash("success_msg", "Successfully deleted images");
+    return res.redirect(`/places/${id}/edit`);
+  } catch (err) {
+    console.error(err);
+    req.flash("error_msg", "Failed to delete images");
+    return res.redirect(`/places/${id}/edit`);
+  }
 };
